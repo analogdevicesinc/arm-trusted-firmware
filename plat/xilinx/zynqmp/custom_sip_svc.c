@@ -7,6 +7,7 @@
 #include <common/bl_common.h>
 #include <common/debug.h>
 #include <smccc_helpers.h>
+#include <lib/mmio.h>
 
 uint64_t custom_smc_handler(uint32_t smc_fid, uint64_t x1, uint64_t x2,
 			    uint64_t x3, uint64_t x4, void *cookie,
@@ -18,6 +19,15 @@ uint64_t custom_smc_handler(uint32_t smc_fid, uint64_t x1, uint64_t x2,
 
 void custom_early_setup(void)
 {
+	/* GPIO Bank1, MIO26 - DEAD_BATTERY */
+	mmio_setbits_32(0xff0a0244, BIT(0));    // DIRM_1
+	mmio_setbits_32(0xff0a0044, BIT(0));    // DATA_1
+	mmio_setbits_32(0xff0a0248, BIT(0));    // OEN_1
+
+	/* GPIO Bank0, MIO19 - SHUTDOWN */
+	mmio_setbits_32(0xff0a0204, BIT(19));   // DIRM_0
+	mmio_setbits_32(0xff0a0040, BIT(19));   // DATA_0
+	mmio_setbits_32(0xff0a0208, BIT(19));   // OEN_0
 }
 
 void custom_mmap_add(void)

@@ -152,6 +152,11 @@ static void __dead2 zynqmp_system_off(void)
 	pm_system_shutdown(PMF_SHUTDOWN_TYPE_SHUTDOWN,
 			   pm_get_shutdown_scope());
 
+	/* GPIO Bank0, MIO19 - SHUTDOWN */
+	mmio_setbits_32(0xff0a0204, BIT(19));   // DIRM_0
+	mmio_clrbits_32(0xff0a0040, BIT(19));   // DATA_0
+	mmio_setbits_32(0xff0a0208, BIT(19));   // OEN_0
+
 	while (1) {
 		wfi();
 	}
