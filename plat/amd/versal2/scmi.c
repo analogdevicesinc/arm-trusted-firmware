@@ -51,8 +51,8 @@ static struct scmi_clk scmi0_clock[] = {
 	CLOCK_CELL(CLK_SERIAL1_0, CLK_SERIAL1_0, "uart1_uartclk", true, 100000000),
 	CLOCK_CELL(CLK_SERIAL1_1, CLK_SERIAL1_1, "uart1_apb_pclk", true, 100000000),
 	CLOCK_CELL(CLK_UFS0_0, CLK_UFS0_0, "ufs_core_clk", true, 100000000),
-	CLOCK_CELL(CLK_UFS0_1, CLK_UFS0_1, "ufs_phy_clk", true, 100000000),
-	CLOCK_CELL(CLK_UFS0_2, CLK_UFS0_2, "ufs_ref_pclk", true, 100000000),
+	CLOCK_CELL(CLK_UFS0_1, CLK_UFS0_1, "ufs_phy_clk", true, 26000000),
+	CLOCK_CELL(CLK_UFS0_2, CLK_UFS0_2, "ufs_ref_pclk", true, 26000000),
 	CLOCK_CELL(CLK_USB0_0, CLK_USB0_0, "usb0_bus_clk", true, 100000000),
 	CLOCK_CELL(CLK_USB0_1, CLK_USB0_1, "usb0_ref_clk", true, 100000000),
 	CLOCK_CELL(CLK_USB0_2, CLK_USB0_2, "usb0_dwc_clk", true, 100000000),
@@ -269,7 +269,7 @@ size_t plat_scmi_clock_count(unsigned int agent_id)
 
 const char *plat_scmi_clock_get_name(unsigned int agent_id, unsigned int scmi_id)
 {
-	struct scmi_clk *clock = clk_find(agent_id, scmi_id);
+	const struct scmi_clk *clock = clk_find(agent_id, scmi_id);
 	const char *ret;
 
 	if (clock == NULL) {
@@ -287,7 +287,7 @@ int32_t plat_scmi_clock_rates_array(unsigned int agent_id, unsigned int scmi_id,
 				    unsigned long *array, size_t *nb_elts,
 				    uint32_t start_idx)
 {
-	struct scmi_clk *clock = clk_find(agent_id, scmi_id);
+	const struct scmi_clk *clock = clk_find(agent_id, scmi_id);
 
 	if (clock == NULL) {
 		return SCMI_NOT_FOUND;
@@ -312,7 +312,7 @@ int32_t plat_scmi_clock_rates_array(unsigned int agent_id, unsigned int scmi_id,
 
 unsigned long plat_scmi_clock_get_rate(unsigned int agent_id, unsigned int scmi_id)
 {
-	struct scmi_clk *clock = clk_find(agent_id, scmi_id);
+	const struct scmi_clk *clock = clk_find(agent_id, scmi_id);
 	unsigned long ret;
 
 	if ((clock == NULL)) {
@@ -341,7 +341,7 @@ int32_t plat_scmi_clock_set_rate(unsigned int agent_id, unsigned int scmi_id,
 
 int32_t plat_scmi_clock_get_state(unsigned int agent_id, unsigned int scmi_id)
 {
-	struct scmi_clk *clock = clk_find(agent_id, scmi_id);
+	const struct scmi_clk *clock = clk_find(agent_id, scmi_id);
 	int32_t ret;
 
 	if ((clock == NULL)) {
@@ -647,8 +647,13 @@ void init_scmi_server(void)
 		for (i = 0U; i < ARRAY_SIZE(scmi0_clock); i++) {
 
 			/* Keep i2c on 100MHz to calculate rates properly */
-			if (i >= CLK_I2C0_0 && i <= CLK_I2C7_0)
+			if ((i >= CLK_I2C0_0) && (i <= CLK_I2C7_0))
 				continue;
+
+			/* Keep UFS clocks to default values to get the expected rates */
+			if (i >= CLK_UFS0_0 && i <= CLK_UFS0_2)
+				continue;
+
 			/*
 			 * SPP supports multiple versions.
 			 * The cpu_clock value is set to corresponding SPP

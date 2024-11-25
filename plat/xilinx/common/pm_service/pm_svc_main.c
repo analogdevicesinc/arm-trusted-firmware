@@ -79,6 +79,10 @@ static void notify_os(void)
 static uint64_t cpu_pwrdwn_req_handler(uint32_t id, uint32_t flags,
 				       void *handle, void *cookie)
 {
+	(void)id;
+	(void)flags;
+	(void)handle;
+	(void)cookie;
 	uint32_t cpu_id = plat_my_core_pos();
 
 	VERBOSE("Powering down CPU %d\n", cpu_id);
@@ -123,6 +127,9 @@ void request_cpu_pwrdwn(void)
 static uint64_t ipi_fiq_handler(uint32_t id, uint32_t flags, void *handle,
 				void *cookie)
 {
+	(void)flags;
+	(void)handle;
+	(void)cookie;
 	uint32_t payload[4] = {0};
 	enum pm_ret_status ret;
 	int ipi_status, i;
@@ -471,9 +478,9 @@ static uintptr_t eemi_handler(uint32_t api_id, uint32_t *pm_arg,
 	 * than other eemi calls.
 	 */
 	if (api_id == (uint32_t)PM_QUERY_DATA) {
-		if ((pm_arg[0] == XPM_QID_CLOCK_GET_NAME ||
-		    pm_arg[0] == XPM_QID_PINCTRL_GET_FUNCTION_NAME) &&
-		    ret == PM_RET_SUCCESS) {
+		if (((pm_arg[0] == XPM_QID_CLOCK_GET_NAME) ||
+		    (pm_arg[0] == XPM_QID_PINCTRL_GET_FUNCTION_NAME)) &&
+		    (ret == PM_RET_SUCCESS)) {
 			SMC_RET2(handle, (uint64_t)buf[0] | ((uint64_t)buf[1] << 32U),
 				(uint64_t)buf[2] | ((uint64_t)buf[3] << 32U));
 		}
@@ -546,12 +553,13 @@ static uintptr_t eemi_api_handler(uint32_t api_id, const uint32_t *pm_arg,
 uint64_t pm_smc_handler(uint32_t smc_fid, uint64_t x1, uint64_t x2, uint64_t x3,
 			uint64_t x4, const void *cookie, void *handle, uint64_t flags)
 {
+	(void)cookie;
 	uintptr_t ret;
 	uint32_t pm_arg[PAYLOAD_ARG_CNT] = {0};
 	uint32_t security_flag = NON_SECURE_FLAG;
 	uint32_t api_id;
 	bool status = false, status_tmp = false;
-	uint64_t x[4] = {x1, x2, x3, x4};
+	const uint64_t x[4] = {x1, x2, x3, x4};
 
 	/* Handle case where PM wasn't initialized properly */
 	if (pm_up == false) {

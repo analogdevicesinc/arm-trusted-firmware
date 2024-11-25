@@ -21,6 +21,7 @@
 
 #define PM_RET_ERROR_NOFEATURE U(19)
 #define ALWAYSTRUE true
+#define LINEAR_MODE BIT(1)
 
 static uintptr_t _sec_entry;
 
@@ -166,7 +167,12 @@ static int32_t no_pm_ioctl(uint32_t device_id, uint32_t ioctl_id,
 
 	switch (ioctl_id) {
 	case IOCTL_OSPI_MUX_SELECT:
-		mmio_write_32(SLCR_OSPI_QSPI_IOU_AXI_MUX_SEL, arg1);
+		if ((arg1 == 0) || (arg1 == 1)) {
+			mmio_clrsetbits_32(SLCR_OSPI_QSPI_IOU_AXI_MUX_SEL, LINEAR_MODE,
+					(arg1 ? LINEAR_MODE : 0));
+		} else {
+			ret = PM_RET_ERROR_ARGS;
+		}
 		break;
 	case IOCTL_UFS_TXRX_CFGRDY_GET:
 		ret = (int32_t) mmio_read_32(PMXC_IOU_SLCR_TX_RX_CONFIG_RDY);
@@ -216,11 +222,11 @@ static uint64_t no_pm_handler(uint32_t smc_fid, uint64_t x1, uint64_t x2, uint64
 	}
 	case PM_GET_CHIPID:
 	{
-		uint32_t idcode, version;
+		uint32_t idcode, version_type;
 
 		idcode  = mmio_read_32(PMC_TAP);
-		version = mmio_read_32(PMC_TAP_VERSION);
-		SMC_RET2(handle, ((uint64_t)idcode << 32), version);
+		version_type = mmio_read_32(PMC_TAP_VERSION);
+		SMC_RET2(handle, ((uint64_t)idcode << 32), version_type);
 	}
 	default:
 		WARN("Unimplemented PM Service Call: 0x%x\n", smc_fid);
